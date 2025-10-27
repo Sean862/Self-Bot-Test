@@ -581,10 +581,108 @@ def main():
                 print(f"\n{Fore.CYAN}Connecting to Discord...{Style.RESET_ALL}")
                 print(f"{Fore.CYAN}{'━' * 60}{Style.RESET_ALL}\n")
                 
+                # Create async function to run bot and start monitoring
+                async def run_anti_nuke():
+                    @client.event
+                    async def on_ready():
+                        print(f'\n{Fore.GREEN}{Style.BRIGHT}Successfully logged in!{Style.RESET_ALL}')
+                        print(f'{Fore.CYAN}Account: {client.user.name}{Style.RESET_ALL}')
+                        print(f'{Fore.CYAN}User ID: {client.user.id}{Style.RESET_ALL}')
+                        await start_anti_nuke_monitor()
+                    
+                    @client.event
+                    async def on_member_ban(guild, user):
+                        """Detect when members are banned"""
+                        if not NUKE_PROTECTION_ENABLED or guild.id != SERVER_ID:
+                            return
+                        
+                        # Try to get audit log entry
+                        try:
+                            async for entry in guild.audit_logs(limit=1, action=discord.AuditLogAction.ban):
+                                if entry.target.id == user.id:
+                                    is_nuke, count, nuker = await check_nuke_activity(guild.id, 'ban', entry)
+                                    if is_nuke:
+                                        await nuke_alert(guild, 'ban', count, nuker)
+                                    else:
+                                        print(f"{Fore.YELLOW}[BAN] {user.name} banned by {nuker} ({count}/{NUKE_THRESHOLDS['bans']}){Style.RESET_ALL}")
+                                    break
+                        except:
+                            is_nuke, count, nuker = await check_nuke_activity(guild.id, 'ban', None)
+                            if is_nuke:
+                                await nuke_alert(guild, 'ban', count, nuker)
+                    
+                    @client.event
+                    async def on_member_remove(member):
+                        """Detect when members are kicked"""
+                        if not NUKE_PROTECTION_ENABLED or member.guild.id != SERVER_ID:
+                            return
+                        
+                        # Check if it was a kick (not a ban or leave)
+                        try:
+                            async for entry in member.guild.audit_logs(limit=1, action=discord.AuditLogAction.kick):
+                                if entry.target.id == member.id:
+                                    is_nuke, count, nuker = await check_nuke_activity(member.guild.id, 'kick', entry)
+                                    if is_nuke:
+                                        await nuke_alert(member.guild, 'kick', count, nuker)
+                                    else:
+                                        print(f"{Fore.YELLOW}[KICK] {member.name} kicked by {nuker} ({count}/{NUKE_THRESHOLDS['kicks']}){Style.RESET_ALL}")
+                                    break
+                        except:
+                            pass
+                    
+                    @client.event
+                    async def on_guild_channel_delete(channel):
+                        """Detect when channels are deleted"""
+                        if not NUKE_PROTECTION_ENABLED or channel.guild.id != SERVER_ID:
+                            return
+                        
+                        try:
+                            async for entry in channel.guild.audit_logs(limit=1, action=discord.AuditLogAction.channel_delete):
+                                if entry.target.id == channel.id:
+                                    is_nuke, count, nuker = await check_nuke_activity(channel.guild.id, 'channel', entry)
+                                    if is_nuke:
+                                        await nuke_alert(channel.guild, 'channel', count, nuker)
+                                    else:
+                                        print(f"{Fore.YELLOW}[CHANNEL DELETE] #{channel.name} deleted by {nuker} ({count}/{NUKE_THRESHOLDS['channels']}){Style.RESET_ALL}")
+                                    break
+                        except:
+                            is_nuke, count, nuker = await check_nuke_activity(channel.guild.id, 'channel', None)
+                            if is_nuke:
+                                await nuke_alert(channel.guild, 'channel', count, nuker)
+                    
+                    @client.event
+                    async def on_guild_role_delete(role):
+                        """Detect when roles are deleted"""
+                        if not NUKE_PROTECTION_ENABLED or role.guild.id != SERVER_ID:
+                            return
+                        
+                        try:
+                            async for entry in role.guild.audit_logs(limit=1, action=discord.AuditLogAction.role_delete):
+                                if entry.target.id == role.id:
+                                    is_nuke, count, nuker = await check_nuke_activity(role.guild.id, 'role', entry)
+                                    if is_nuke:
+                                        await nuke_alert(role.guild, 'role', count, nuker)
+                                    else:
+                                        print(f"{Fore.YELLOW}[ROLE DELETE] @{role.name} deleted by {nuker} ({count}/{NUKE_THRESHOLDS['roles']}){Style.RESET_ALL}")
+                                    break
+                        except:
+                            is_nuke, count, nuker = await check_nuke_activity(role.guild.id, 'role', None)
+                            if is_nuke:
+                                await nuke_alert(role.guild, 'role', count, nuker)
+                    
+                    try:
+                        await client.start(TOKEN, bot=False)
+                    except KeyboardInterrupt:
+                        print(f"\n\n{Fore.YELLOW}Stopping bot...{Style.RESET_ALL}")
+                        await client.close()
+                    except TypeError:
+                        try:
+                            await client.start(TOKEN)
+                        except Exception:
+                            pass
+                
                 try:
-                    asyncio.run(run_bot())
-                    # After connection, start monitoring
-                    await start_anti_nuke_monitor()
+                    asyncio.run(run_anti_nuke())
                 except KeyboardInterrupt:
                     print(f"\n{Fore.YELLOW}Stopping anti-nuke monitor...{Style.RESET_ALL}")
                     NUKE_PROTECTION_ENABLED = False
