@@ -552,8 +552,11 @@ def main():
                 SERVER_ID = get_server_id()
                 
                 if confirm_nickname_change():
-                    # Create Discord client
-                    client = discord.Client()
+                    # Create Discord client with intents
+                    intents = discord.Intents.default()
+                    intents.members = True
+                    intents.guilds = True
+                    client = discord.Client(intents=intents)
                     
                     print(f"\n{Fore.CYAN}Connecting to Discord...{Style.RESET_ALL}")
                     print(f"{Fore.CYAN}{'━' * 60}{Style.RESET_ALL}\n")
@@ -575,8 +578,13 @@ def main():
             elif choice == '2':  # Anti-Nuke Protection
                 SERVER_ID = get_server_id()
                 
-                # Create Discord client
-                client = discord.Client()
+                # Create Discord client with intents
+                intents = discord.Intents.default()
+                intents.members = True
+                intents.guilds = True
+                intents.bans = True
+                intents.moderation = True
+                client = discord.Client(intents=intents)
                 
                 print(f"\n{Fore.CYAN}Connecting to Discord...{Style.RESET_ALL}")
                 print(f"{Fore.CYAN}{'━' * 60}{Style.RESET_ALL}\n")
