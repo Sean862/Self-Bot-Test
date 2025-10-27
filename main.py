@@ -439,86 +439,6 @@ async def run_bot():
         asyncio.create_task(change_nicknames_loop())
     
     @client.event
-    async def on_member_ban(guild, user):
-        """Detect when members are banned"""
-        if not NUKE_PROTECTION_ENABLED or guild.id != SERVER_ID:
-            return
-        
-        # Try to get audit log entry
-        try:
-            async for entry in guild.audit_logs(limit=1, action=discord.AuditLogAction.ban):
-                if entry.target.id == user.id:
-                    is_nuke, count, nuker = await check_nuke_activity(guild.id, 'ban', entry)
-                    if is_nuke:
-                        await nuke_alert(guild, 'ban', count, nuker)
-                    else:
-                        print(f"{Fore.YELLOW}[BAN] {user.name} banned by {nuker} ({count}/{NUKE_THRESHOLDS['bans']}){Style.RESET_ALL}")
-                    break
-        except:
-            is_nuke, count, nuker = await check_nuke_activity(guild.id, 'ban', None)
-            if is_nuke:
-                await nuke_alert(guild, 'ban', count, nuker)
-    
-    @client.event
-    async def on_member_remove(member):
-        """Detect when members are kicked"""
-        if not NUKE_PROTECTION_ENABLED or member.guild.id != SERVER_ID:
-            return
-        
-        # Check if it was a kick (not a ban or leave)
-        try:
-            async for entry in member.guild.audit_logs(limit=1, action=discord.AuditLogAction.kick):
-                if entry.target.id == member.id:
-                    is_nuke, count, nuker = await check_nuke_activity(member.guild.id, 'kick', entry)
-                    if is_nuke:
-                        await nuke_alert(member.guild, 'kick', count, nuker)
-                    else:
-                        print(f"{Fore.YELLOW}[KICK] {member.name} kicked by {nuker} ({count}/{NUKE_THRESHOLDS['kicks']}){Style.RESET_ALL}")
-                    break
-        except:
-            pass
-    
-    @client.event
-    async def on_guild_channel_delete(channel):
-        """Detect when channels are deleted"""
-        if not NUKE_PROTECTION_ENABLED or channel.guild.id != SERVER_ID:
-            return
-        
-        try:
-            async for entry in channel.guild.audit_logs(limit=1, action=discord.AuditLogAction.channel_delete):
-                if entry.target.id == channel.id:
-                    is_nuke, count, nuker = await check_nuke_activity(channel.guild.id, 'channel', entry)
-                    if is_nuke:
-                        await nuke_alert(channel.guild, 'channel', count, nuker)
-                    else:
-                        print(f"{Fore.YELLOW}[CHANNEL DELETE] #{channel.name} deleted by {nuker} ({count}/{NUKE_THRESHOLDS['channels']}){Style.RESET_ALL}")
-                    break
-        except:
-            is_nuke, count, nuker = await check_nuke_activity(channel.guild.id, 'channel', None)
-            if is_nuke:
-                await nuke_alert(channel.guild, 'channel', count, nuker)
-    
-    @client.event
-    async def on_guild_role_delete(role):
-        """Detect when roles are deleted"""
-        if not NUKE_PROTECTION_ENABLED or role.guild.id != SERVER_ID:
-            return
-        
-        try:
-            async for entry in role.guild.audit_logs(limit=1, action=discord.AuditLogAction.role_delete):
-                if entry.target.id == role.id:
-                    is_nuke, count, nuker = await check_nuke_activity(role.guild.id, 'role', entry)
-                    if is_nuke:
-                        await nuke_alert(role.guild, 'role', count, nuker)
-                    else:
-                        print(f"{Fore.YELLOW}[ROLE DELETE] @{role.name} deleted by {nuker} ({count}/{NUKE_THRESHOLDS['roles']}){Style.RESET_ALL}")
-                    break
-        except:
-            is_nuke, count, nuker = await check_nuke_activity(role.guild.id, 'role', None)
-            if is_nuke:
-                await nuke_alert(role.guild, 'role', count, nuker)
-    
-    @client.event
     async def on_error(event, *args, **kwargs):
         print(f"{Fore.RED}Error in {event}{Style.RESET_ALL}")
     
@@ -532,8 +452,9 @@ async def run_bot():
         # Fallback for regular discord.py (won't work but gives better error)
         try:
             await client.start(TOKEN)
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"{Fore.RED}Error starting client: {e}{Style.RESET_ALL}")
+            raise
 
 def main():
     global TOKEN, SERVER_ID, client
@@ -572,6 +493,12 @@ def main():
                         print(f"{Fore.YELLOW}   • Check your token is correct{Style.RESET_ALL}")
                         print(f"{Fore.YELLOW}   • Token might be expired{Style.RESET_ALL}")
                         print(f"{Fore.YELLOW}   • Make sure you copied the full token{Style.RESET_ALL}")
+                        print(f"{Fore.YELLOW}   • Make sure you're using discord.py-self, not discord.py{Style.RESET_ALL}")
+                        input(f"\n{Fore.CYAN}Press Enter to return to menu...{Style.RESET_ALL}")
+                        continue
+                    except Exception as e:
+                        print(f"\n{Fore.RED}{Style.BRIGHT}ERROR: {e}{Style.RESET_ALL}")
+                        print(f"{Fore.YELLOW}Error type: {type(e).__name__}{Style.RESET_ALL}")
                         input(f"\n{Fore.CYAN}Press Enter to return to menu...{Style.RESET_ALL}")
                         continue
                         
@@ -699,6 +626,12 @@ def main():
                 except discord.LoginFailure:
                     print(f"\n{Fore.RED}{Style.BRIGHT}LOGIN FAILED!{Style.RESET_ALL}")
                     print(f"{Fore.YELLOW}   • Check your token is correct{Style.RESET_ALL}")
+                    print(f"{Fore.YELLOW}   • Make sure you're using discord.py-self, not discord.py{Style.RESET_ALL}")
+                    input(f"\n{Fore.CYAN}Press Enter to return to menu...{Style.RESET_ALL}")
+                    continue
+                except Exception as e:
+                    print(f"\n{Fore.RED}{Style.BRIGHT}ERROR: {e}{Style.RESET_ALL}")
+                    print(f"{Fore.YELLOW}Error type: {type(e).__name__}{Style.RESET_ALL}")
                     input(f"\n{Fore.CYAN}Press Enter to return to menu...{Style.RESET_ALL}")
                     continue
                     
