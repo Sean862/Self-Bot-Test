@@ -44,13 +44,23 @@ sys.modules['cgi'] = cgi
 # ========================================
 import discord
 import asyncio
+import os
+
+def clear_screen():
+    """Clear the terminal screen"""
+    os.system('cls' if os.name == 'nt' else 'clear')
 
 def print_banner():
     banner = """
-╔══════════════════════════════════════════════════╗
-║                  Kiera V0.1                      ║
-║           Discord Self-Bot Toolkit               ║
-╚══════════════════════════════════════════════════╝
+╔═══╗╔╗ ╔╗╔════╗╔════╗╔═╗╔═╗
+║╔═╗║║║ ║║║╔╗╔╗║║╔╗╔╗║║║╚╝║║
+║║ ║║║║ ║║╚╝║║╚╝╚╝║║╚╝║╔╗║║
+║╚═╝║║║ ║║  ║║     ║║  ║║║║║
+║╔═╗║║╚═╝║ ╔╝╚╗   ║║  ║║║║║
+╚╝ ╚╝╚═╝╚╝ ╚══╝   ╚╝  ╚╝╚╝╚╝
+╦  ╔═╗╔═╗╔╦╗╔═╗
+║  ║ ║╠═╣ ║║║╣ 
+╩═╝╚═╝╩ ╩═╩╝╚═╝
 """
     print(banner)
     print("WARNING: Self-bots violate Discord ToS!")
@@ -70,10 +80,23 @@ def get_token():
             print("Invalid token (too short). Try again.\n")
 
 def show_menu():
-    print("\n" + "━" * 50)
+    clear_screen()
+    banner = """
+╔═══╗╔╗ ╔╗╔════╗╔════╗╔═╗╔═╗
+║╔═╗║║║ ║║║╔╗╔╗║║╔╗╔╗║║║╚╝║║
+║║ ║║║║ ║║╚╝║║╚╝╚╝║║╚╝║╔╗║║
+║╚═╝║║║ ║║  ║║     ║║  ║║║║║
+║╔═╗║║╚═╝║ ╔╝╚╗   ║║  ║║║║║
+╚╝ ╚╝╚═╝╚╝ ╚══╝   ╚╝  ╚╝╚╝╚╝
+╦  ╔═╗╔═╗╔╦╗╔═╗
+║  ║ ║╠═╣ ║║║╣ 
+╩═╝╚═╝╩ ╩═╩╝╚═╝
+"""
+    print(banner)
+    print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
     print("[ 1 ] - Nickname Changer")
     print("[ 2 ] - Exit")
-    print("━" * 50)
+    print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
     
     while True:
         choice = input("Select option: ").strip()
@@ -237,9 +260,9 @@ def main():
                     print("\nConnecting to Discord...")
                     print("━" * 60 + "\n")
                     
-                    # Run the bot
+                    # Run the bot - FIXED: Removed bot=False parameter
                     try:
-                        client.run(TOKEN, bot=False)
+                        client.run(TOKEN)  # Removed bot=False
                     except KeyboardInterrupt:
                         print("\nReturning to main menu...")
                         continue
