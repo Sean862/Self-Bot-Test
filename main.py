@@ -1,5 +1,5 @@
 def get_nickname_command():
-    """Extracted nickname changer command only - ALL STATUSES INCLUDING OFFLINE"""
+    """Extracted nickname changer command only - ALL MEMBERS (no status filtering)"""
     
     # ========================================
     # FIX FOR PYTHON 3.13 CGI MODULE REMOVAL
@@ -44,14 +44,6 @@ def get_nickname_command():
     print("\nEnter Server ID:")
     server_id = int(input("Server ID: ").strip())
     
-    # ALL statuses including offline
-    target_statuses = [
-        discord.Status.online,
-        discord.Status.idle, 
-        discord.Status.dnd,
-        discord.Status.offline  # ADDED OFFLINE
-    ]
-    
     client = discord.Client()
     
     @client.event
@@ -65,7 +57,7 @@ def get_nickname_command():
             return
             
         print(f"Found server: {target_guild.name}")
-        print("Starting nickname changes for ALL members (including offline)...\n")
+        print("Starting nickname changes for ALL members...\n")
         
         batch_count = 0
         total_changed = 0
@@ -77,23 +69,16 @@ def get_nickname_command():
             print(f"Batch #{batch_count} starting...")
             
             for member in target_guild.members:
-                if (member.status in target_statuses and  # This now includes offline
-                    not member.bot and 
-                    member != client.user):
+                # Change ALL members (no status check)
+                if not member.bot and member != client.user:
                     
                     try:
                         await member.edit(nick="ht | discord.gg/NGjgMVqp6w - Kieran Runs You")
                         changes_this_batch += 1
                         total_changed += 1
                         
-                        status_text = {
-                            discord.Status.online: "ONLINE",
-                            discord.Status.idle: "IDLE", 
-                            discord.Status.dnd: "DND",
-                            discord.Status.offline: "OFFLINE"  # ADDED OFFLINE
-                        }
-                        
-                        status_label = status_text.get(member.status, "UNKNOWN")
+                        # Show member status for logging
+                        status_label = str(member.status).upper()
                         print(f"[{status_label}] Changed {member.name} -> ht | discord.gg/NGjgMVqp6w - Kieran Runs You")
                         
                     except discord.Forbidden:
