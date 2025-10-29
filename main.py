@@ -41,7 +41,11 @@ token = input("Token: ").strip()
 print("\nEnter Server ID:")
 server_id = int(input("Server ID: ").strip())
 
-client = discord.Client()
+# ========================================
+# FIXED: Added intents for newer discord.py
+# ========================================
+intents = discord.Intents.all()
+client = discord.Client(intents=intents)
 
 @client.event
 async def on_ready():
